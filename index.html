@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DARPANA — Smart Home Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;500&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+  <div id="login-screen">
+    <div class="grid-bg"></div>
+    <div class="glow-orb"></div>
+    <div class="login-box">
+      <div class="login-top-bar"></div>
+      <div class="login-logo">
+        <div class="logo-wordmark">DARPANA</div>
+        <div class="logo-sub">SMART HOME CONTROL SYSTEM · v1.0</div>
+      </div>
+      <div class="login-field">
+        <label class="field-label">USER ID</label>
+        <input class="field-input" id="inp-user" type="text" placeholder="Enter username" autocomplete="off" />
+      </div>
+      <div class="login-field">
+        <label class="field-label">PASSWORD</label>
+        <input class="field-input" id="inp-pass" type="password" placeholder="Enter password" />
+      </div>
+      <button class="login-btn" id="login-btn">AUTHENTICATE</button>
+      <div class="login-error" id="login-error"></div>
+      <div class="login-hint"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+  <div id="dashboard">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-logo">DARPANA</span>
+        <div class="topbar-divider"></div>
+        <span class="topbar-sub">SMART HOME CONTROL</span>
+      </div>
+      <div class="topbar-right">
+        <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+        <div class="mqtt-status" id="mqtt-status">⬤ CONNECTING</div>
+        <div class="topbar-clock" id="clock">--:--:--</div>
+        <button class="topbar-logout" id="logout-btn">LOGOUT</button>
+      </div>
+    </header>
+
+    <!-- Intrusion notification banner -->
+    <div class="notif-banner" id="notif-banner">
+      <span class="notif-icon">⚠</span>
+      <span class="notif-text" id="notif-text">Motion detected by PIR sensor!</span>
+      <button class="notif-close" id="notif-close">DISMISS</button>
+    </div>
+
+    <main class="main-grid">
+
+      <!-- STAT STRIP -->
+      <section class="stat-strip">
+        <div class="stat-card s-cyan">
+          <div class="stat-label">TEMPERATURE</div>
+          <div class="stat-value" id="stat-temp">--<span class="stat-unit">°C</span></div>
+          <div class="stat-sub">DHT22 · SYS-001</div>
+        </div>
+        <div class="stat-card s-blue">
+          <div class="stat-label">HUMIDITY</div>
+          <div class="stat-value" id="stat-hum">--<span class="stat-unit">%</span></div>
+          <div class="stat-sub">DHT22 · SYS-001</div>
+        </div>
+        <div class="stat-card s-amber">
+          <div class="stat-label">DOOR LOCK</div>
+          <div class="stat-value" id="stat-door">LOCKED</div>
+          <div class="stat-sub">Servo · SYS-002</div>
+        </div>
+        <div class="stat-card s-red" id="pir-stat-card">
+          <div class="stat-label">PIR MOTION</div>
+          <div class="stat-value" id="stat-pir">CLEAR</div>
+          <div class="stat-sub" id="stat-pir-sub">No motion detected</div>
+        </div>
+      </section>
+
+      <!-- PANELS -->
+      <section class="panels-grid">
+
+        <!-- Climate Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="ph-left">
+              <span class="panel-icon">🌡</span>
+              <div>
+                <div class="panel-title">CLIMATE MONITOR</div>
+                <div class="panel-id">SYS-001 · DHT22</div>
+              </div>
+            </div>
+            <div class="badge badge-on">ONLINE</div>
+          </div>
+          <div class="panel-body">
+            <div class="climate-row">
+              <div class="clim-block">
+                <div class="clim-val" id="clim-temp">--°</div>
+                <div class="clim-lbl">Temperature</div>
+              </div>
+              <div class="clim-divider"></div>
+              <div class="clim-block">
+                <div class="clim-val" id="clim-hum" style="color:var(--c-blue)">--%</div>
+                <div class="clim-lbl">Humidity</div>
+              </div>
+            </div>
+            <div class="spark-wrap">
+              <div class="spark-label">TEMPERATURE — LAST 20 READINGS</div>
+              <canvas id="spark-temp" height="48"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Door Lock Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="ph-left">
+              <span class="panel-icon">🔐</span>
+              <div>
+                <div class="panel-title">DOOR LOCK</div>
+                <div class="panel-id">SYS-002 · Servo + Keypad</div>
+              </div>
+            </div>
+            <div class="badge badge-on">ONLINE</div>
+          </div>
+          <div class="panel-body">
+            <div class="lock-row">
+              <div class="lock-icon-big" id="lock-icon">🔒</div>
+              <div>
+                <div class="lock-state" id="lock-state">LOCKED</div>
+                <div class="lock-sub" id="lock-sub">Door secured</div>
+              </div>
+            </div>
+            <div class="otp-box">
+              <div class="otp-label">TODAY'S OTP (from ESP32)</div>
+              <div class="otp-code" id="otp-code">••••••</div>
+              <div class="otp-hint">Resets every 24 hrs · enter on keypad to unlock</div>
+              <button class="otp-btn" id="otp-btn">REVEAL CODE</button>
+            </div>
+            <div class="control-row">
+              <div class="ctrl-label">REMOTE OVERRIDE</div>
+              <div class="toggle-wrap">
+                <span class="tog-lbl" id="lbl-door">LOCKED</span>
+                <label class="toggle">
+                  <input type="checkbox" id="tog-door" />
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PIR Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="ph-left">
+              <span class="panel-icon">👁</span>
+              <div>
+                <div class="panel-title">PIR INTRUSION</div>
+                <div class="panel-id">SYS-003 · PIR Sensor</div>
+              </div>
+            </div>
+            <div class="badge badge-on">ONLINE</div>
+          </div>
+          <div class="panel-body">
+            <div class="pir-display" id="pir-display">
+              <div class="pir-ring" id="pir-ring"></div>
+              <div>
+                <div class="pir-state" id="pir-state">CLEAR</div>
+                <div class="pir-sub">No motion detected</div>
+              </div>
+            </div>
+            <div class="event-log">
+              <div class="evlog-title">RECENT EVENTS</div>
+              <div id="pir-log">
+                <div class="ev-row">
+                  <div class="ev-dot dot-green"></div>
+                  <div class="ev-time">--:--</div>
+                  <div class="ev-msg">System armed · monitoring active</div>
+                </div>
+              </div>
+            </div>
+            <button class="demo-btn" id="pir-test-btn">⚡ SIMULATE INTRUSION</button>
+          </div>
+        </div>
+
+        <!-- Relay Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="ph-left">
+              <span class="panel-icon">⚡</span>
+              <div>
+                <div class="panel-title">DEVICE CONTROL</div>
+                <div class="panel-id">SYS-004 · Relay / MOSFET</div>
+              </div>
+            </div>
+            <div class="badge badge-on">ONLINE</div>
+          </div>
+          <div class="panel-body">
+            <!-- Device 1 -->
+            <div class="device-row">
+              <div class="dev-info">
+                <span class="dev-icon">💡</span>
+                <div>
+                  <div class="dev-name">LED / Light 1</div>
+                  <div class="dev-id">RELAY-1 · GPIO 4</div>
+                </div>
+              </div>
+              <div class="toggle-wrap">
+                <span class="tog-lbl" id="lbl-r1">OFF</span>
+                <label class="toggle">
+                  <input type="checkbox" id="tog-r1" />
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </div>
+            </div>
+            <div class="dev-divider"></div>
+            <!-- Device 2 -->
+            <div class="device-row">
+              <div class="dev-info">
+                <span class="dev-icon">🔌</span>
+                <div>
+                  <div class="dev-name">Motor / Fan</div>
+                  <div class="dev-id">RELAY-2 · GPIO 27</div>
+                </div>
+              </div>
+              <div class="toggle-wrap">
+                <span class="tog-lbl" id="lbl-r2">OFF</span>
+                <label class="toggle">
+                  <input type="checkbox" id="tog-r2" />
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </div>
+            </div>
+            <div class="dev-divider"></div>
+            <div class="dev-summary">
+              <div class="sum-item">
+                <div class="sum-val" id="dev-active">0</div>
+                <div class="sum-lbl">ACTIVE</div>
+              </div>
+              <div class="sum-item">
+                <div class="sum-val">2</div>
+                <div class="sum-lbl">TOTAL</div>
+              </div>
+              <div class="sum-item">
+                <div class="sum-val" id="dev-uptime">00:00</div>
+                <div class="sum-lbl">UPTIME</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- SYSTEM LOG -->
+      <section class="log-strip">
+        <div class="log-header">
+          <div class="log-title">SYSTEM EVENT LOG</div>
+          <div class="log-live-tag">LIVE FEED</div>
+        </div>
+        <div id="sys-log"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MQTT.js library — needed for browser MQTT over WebSocket -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.4/mqtt.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
